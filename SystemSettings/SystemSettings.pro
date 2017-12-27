@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += network
+QT       += network core
+CONFIG += c++11
 QT       -= gui
 
 TARGET = SystemSettings
@@ -24,11 +25,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        systemsettings.cpp
+        systemsettings.cpp \
+        wireless.cpp
 
 HEADERS += \
         systemsettings.h \
-        systemsettings_global.h 
+        systemsettings_global.h \ 
+        wireless.h
 
 unix {
     headers.path = /usr/lib/HomeThings
