@@ -11,14 +11,54 @@
 class Wireless : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(QJsonObject info READ info NOTIFY infoChanged)
     Q_PROPERTY(QString interface READ interface WRITE setInterface NOTIFY interfaceChanged)
     Q_PROPERTY(QList<QVariant> network_list READ network_list NOTIFY network_listChanged)
+    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
 
 public:
     explicit Wireless(QObject *parent = nullptr);
+    /**
+     * @brief starts the network interface
+     */
+    void startWlan();
+    /**
+     * @brief stop network interface
+     */
+    void stopWlan();
+    /**
+     * @brief set network wireless. Receives the ESSID of the network and the password and run the wpa_passphrase command to obtain the output to the file wpa_supplicant.conf
+     * @param QJSonObject data : data in JSON format with network ESSID and password
+     */
+    void setNetworkWireless(QJsonObject data);
+    /**
+     * @brief validate ESSID fields and password
+     * @param QJsonData data : fields = ESSID, password
+     */
+    bool validateFieldsNetworkWireless(QJsonObject &data);
+    /**
+     * @brief Write the contents of the wpa_passphrase() command in the wpa_supplicant file
+     * @param QString data : content of wpa_passphrase() command
+     * @return return status of writing wpa_supplicant.conf file
+     */
+    bool writeWpaSupplicant(QString data);
+    /**
+     * @brief returns a list with available networks
+     * @return
+     */
+    QList<QVariant> network_list() { return m_network_list; }
+    /**
+     * @brief returns the status of busy
+     */
+    bool busy() { return m_busy; }
+    /**
+     * @brief returns the error message
+     * @return
+     */
+    QString error() { return m_error; }
 
-signals:
+Q_SIGNALS:
     /**
      * @brief emits the signal that the info variable has been updated
      */
@@ -31,6 +71,14 @@ signals:
      * @brief emits the signal that the interface name variable has been updated
      */
     void interfaceChanged();
+    /**
+     * @brief emits the signal that the status has been updated
+     */
+    void busyChanged();
+    /**
+     * @brief emits the signal that some error has occurred
+     */
+    void errorChanged();
 
 public slots:
     /**
@@ -59,11 +107,6 @@ public slots:
      * @brief scan the wireless network. It is executed by a time in construct
      */
     void scanWireless();
-    /**
-     * @brief network_list
-     * @return
-     */
-    QList<QVariant> network_list() { return m_network_list; }
 
 protected slots:
     /**
@@ -71,6 +114,11 @@ protected slots:
      * @param int status : parameter sent by the signal "finished (int)" when the process terminates execution
      */
     void parseScanWireless(int status);
+    /**
+     * @brief changes the m_status to busy and issues the busyChanged()
+     * @param bool status
+     */
+    void busyIndicator(bool status);
 
 private:
     QString m_interface = "";
@@ -80,10 +128,15 @@ private:
 
     QJsonObject m_info;
     QString m_wifi_connected = "off/any";
+    QString m_error = "";
 
     QProcess scan_wireless;
-    bool m_busy_scan = false;
     QList<QVariant> m_network_list;
+
+    bool m_busy_scan = false;
+    bool m_busy = false;
+
+    const QString m_wpa_supplicant = "/tmp/wpa_supplicant.conf";
 };
 
 #endif // WIRELESS_H
