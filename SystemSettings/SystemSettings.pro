@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += network core
+QT       += network core sql
 CONFIG += c++11
 QT       -= gui
 
@@ -26,17 +26,27 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         systemsettings.cpp \
-        wireless.cpp
+        wireless.cpp \
+    databasesettings.cpp
 
 HEADERS += \
         systemsettings.h \
         systemsettings_global.h \ 
-        wireless.h
+        wireless.h \
+    databasesettings.h
+
+DISTFILES += \
+    sql/Wireless.sql
 
 unix {
     headers.path = /usr/lib/HomeThings
     headers.files = $$HEADERS
     target.path = /usr/lib
+
+    sql_files.path = /etc/HomeThings/sql
+    sql_files.files = sql/Wireless.sql
+
     INSTALLS += target
     INSTALLS += headers
+    INSTALLS += sql_files
 }
