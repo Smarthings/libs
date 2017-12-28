@@ -234,7 +234,10 @@ void Wireless::parseScanWireless(int status)
 
             QRegularExpressionMatch match_START = reg_START.match(line);
             if (match_START.hasMatch() && obj.length() > 0)
+            {
+                m_network_list.append(obj.toVariantMap());
                 obj = {};
+            }
 
             QRegularExpressionMatch match_SSID = reg_SSID.match(line);
             if (match_SSID.hasMatch())
@@ -275,8 +278,8 @@ void Wireless::parseScanWireless(int status)
         }
         if (!m_network_list.isEmpty())
             emit network_listChanged();
+        scan_wireless.close();
     }
-    scan_wireless.close();
     m_busy_scan = false;
 }
 
