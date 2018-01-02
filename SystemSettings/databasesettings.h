@@ -3,20 +3,22 @@
 
 #include <QObject>
 #include <QtSql/QSqlDatabase>
-#include <QtSql/QSqlError>
 
 class DatabaseSettings : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
+
 public:
     explicit DatabaseSettings(QObject *parent = nullptr);
+    ~DatabaseSettings();
 
 signals:
     void errorChanged();
 
 public slots:
     QString error() { return m_error; }
+    void openDatabaseSettings();
 
 protected:
     void createTables();
