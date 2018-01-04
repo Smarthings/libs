@@ -19,7 +19,7 @@ Wireless::Wireless(QObject *parent) :
     timer->start(m_scan_time);
 
     db->openDatabaseSettings();
-    getSettings({"id", "ssid", "pass_crypt"}, "");
+    getSettings(m_fields, "");
 }
 
 Wireless::~Wireless()
@@ -118,7 +118,10 @@ void Wireless::setNetworkWireless(QJsonObject data)
 
             QRegularExpressionMatch match_psk = psk.match(line);
             if (match_psk.hasMatch())
+            {
                 saveSettings({{"ssid", data.value("ESSID").toString()}, {"pass_crypt", QString(match_psk.captured()).split("=")[1]}});
+                getSettings(m_fields, "");
+            }
 
             contentWpaSupplicant.append(line);
         }
@@ -259,6 +262,7 @@ void Wireless::parseScanWireless(int status)
                 {
                     obj.insert("id", savedPass.at(0));
                     obj.insert("saved", savedPass.at(1));
+                    qDebug() << split.at(0) << obj;
                 }
                 if (split.at(1) == m_wifi_connected)
                     obj.insert("connected", true);
@@ -314,6 +318,7 @@ void Wireless::saveSettings(QJsonObject data)
 void Wireless::getSettings(QStringList fields,  QString where)
 {
     m_list_settings_saved = db->get(fields, where);
+    qDebug() << m_list_settings_saved;
 }
 
 bool Wireless::deleteSettings(quint32 id)
