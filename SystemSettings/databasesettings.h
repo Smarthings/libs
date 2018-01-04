@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QtSql/QSqlDatabase>
+#include <QJsonObject>
+#include <QList>
 
 class DatabaseSettings : public QObject
 {
@@ -10,8 +12,11 @@ class DatabaseSettings : public QObject
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
 
 public:
-    explicit DatabaseSettings(QObject *parent = nullptr);
+    explicit DatabaseSettings(QString table, QObject *parent = nullptr);
     ~DatabaseSettings();
+    QList<QJsonObject> get(QStringList fields, QString where);
+    bool save(QJsonObject data);
+    bool remove(quint32 id);
 
 signals:
     void errorChanged();
@@ -21,14 +26,16 @@ public slots:
     void openDatabaseSettings();
 
 protected:
-    void createTables();
+    void createTable();
 
 private:
-    const QString m_database_file = "/tmp/SystemSettings.sql";
     QSqlDatabase m_database;
-
     QString m_error = "";
+
     const QString m_etc = "/etc/HomeThings";
+    const QString m_path_database = "/tmp";
+    QString m_database_file;
+    QString m_table;
 };
 
 #endif // DATABASESETTINGS_H

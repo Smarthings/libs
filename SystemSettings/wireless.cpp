@@ -1,4 +1,3 @@
-#include "wireless.h"
 #include <QNetworkInterface>
 #include <QProcess>
 #include <QRegularExpression>
@@ -6,6 +5,10 @@
 #include <QFile>
 #include <QDebug>
 #include <iostream>
+#include <QSqlRecord>
+#include <QSqlField>
+#include "wireless.h"
+#include "databasesettings.h"
 
 Wireless::Wireless(QObject *parent) :
     QObject(parent),
@@ -14,6 +17,15 @@ Wireless::Wireless(QObject *parent) :
     connect(&scan_wireless, SIGNAL(finished(int)), this, SLOT(parseScanWireless(int)));
     connect(timer, SIGNAL(timeout()), this, SLOT(scanWireless()), Qt::UniqueConnection);
     timer->start(m_scan_time);
+
+    db->openDatabaseSettings();
+    getSettings({"id", "ssid", "pass_crypt"}, "");
+}
+
+Wireless::~Wireless()
+{
+    delete db;
+    delete timer;
 }
 
 void Wireless::startWlan()
@@ -106,10 +118,8 @@ void Wireless::setNetworkWireless(QJsonObject data)
 
             QRegularExpressionMatch match_psk = psk.match(line);
             if (match_psk.hasMatch())
-            {
-                //QString pass_crypt = QString(match_psk.captured()).split("=")[1];
-                // Salvar senha criptografada no banco de dados
-            }
+                saveSettings({{"ssid", data.value("ESSID").toString()}, {"pass_crypt", QString(match_psk.captured()).split("=")[1]}});
+
             contentWpaSupplicant.append(line);
         }
         write_network_wireless.close();
@@ -244,6 +254,12 @@ void Wireless::parseScanWireless(int status)
             {
                 QStringList split = match_SSID.captured().replace("\"", "").split(":");
                 obj.insert(split.at(0), split.at(1));
+                QStringList savedPass = checkSaved(split.at(1));
+                if (savedPass.count() > 0)
+                {
+                    obj.insert("id", savedPass.at(0));
+                    obj.insert("saved", savedPass.at(1));
+                }
                 if (split.at(1) == m_wifi_connected)
                     obj.insert("connected", true);
             }
@@ -289,6 +305,36 @@ void Wireless::busyIndicator(bool status)
     emit busyChanged();
 }
 
+void Wireless::saveSettings(QJsonObject data)
+{
+    if (db->save(data))
+        qDebug() << "Save";
+}
+
+void Wireless::getSettings(QStringList fields,  QString where)
+{
+    m_list_settings_saved = db->get(fields, where);
+}
+
+bool Wireless::deleteSettings(quint32 id)
+{
+    return db->remove(id);
+}
+
+QStringList Wireless::checkSaved(QString ssid)
+{
+    QStringList list;
+    for (const auto &essid : m_list_settings_saved)
+    {
+        if (essid.value("ssid").toString() == ssid)
+        {
+            list << essid.value("id").toString() << essid.value("ssid").toString();
+            return list;
+        }
+    }
+    return list;
+}
+
 const QString Wireless::getSSID(QString iface)
 {
     QString command = QString("iwconfig %1").arg(iface);
@@ -310,4 +356,3 @@ const QString Wireless::getSSID(QString iface)
     }
     return QString("");
 }
-

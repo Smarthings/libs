@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QProcess>
 #include <QTimer>
+#include "databasesettings.h"
 
 class Wireless : public QObject
 {
@@ -19,6 +20,7 @@ class Wireless : public QObject
 
 public:
     explicit Wireless(QObject *parent = nullptr);
+    ~Wireless();
     /**
      * @brief starts the network interface
      */
@@ -119,6 +121,30 @@ protected slots:
      * @param bool status
      */
     void busyIndicator(bool status);
+    /**
+     * @brief saveSettings
+     * @param table
+     * @param data
+     */
+    void saveSettings(QJsonObject data);
+    /**
+     * @brief getSettings
+     * @param fields
+     * @param where
+     */
+    void getSettings(QStringList fields, QString where);
+    /**
+     * @brief deleteSettings
+     * @param id
+     * @return
+     */
+    bool deleteSettings(quint32 id);
+    /**
+     * @brief checkSaved
+     * @param ssid
+     * @return
+     */
+    QStringList checkSaved(QString ssid);
 
 private:
     QString m_interface = "";
@@ -137,6 +163,10 @@ private:
     bool m_busy = false;
 
     const QString m_wpa_supplicant = "/tmp/wpa_supplicant.conf";
+    const QString m_table = "Wireless";
+    QList<QJsonObject> m_list_settings_saved;
+
+    DatabaseSettings *db = new DatabaseSettings(m_table);
 };
 
 #endif // WIRELESS_H
