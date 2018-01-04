@@ -262,7 +262,6 @@ void Wireless::parseScanWireless(int status)
                 {
                     obj.insert("id", savedPass.at(0));
                     obj.insert("saved", savedPass.at(1));
-                    qDebug() << split.at(0) << obj;
                 }
                 if (split.at(1) == m_wifi_connected)
                     obj.insert("connected", true);
