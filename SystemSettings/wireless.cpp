@@ -10,8 +10,7 @@
 #include "wireless.h"
 #include "databasesettings.h"
 
-Wireless::Wireless(QObject *parent) :
-    QObject(parent),
+Wireless::Wireless() :
     timer(new QTimer)
 {
     connect(&scan_wireless, SIGNAL(finished(int)), this, SLOT(parseScanWireless(int)));
@@ -38,10 +37,7 @@ void Wireless::startWlan()
     start_wlan.start(command);
 
     if (!start_wlan.waitForFinished())
-    {
-        m_error = QString("startWlan Error: %1").arg(start_wlan.errorString());
-        emit errorChanged();
-    }
+        setError(QString("startWlan Error: %1").arg(start_wlan.errorString()));
     start_wlan.close();
 }
 
@@ -55,10 +51,7 @@ void Wireless::stopWlan()
     stop_wlan.start(command);
 
     if (!stop_wlan.waitForFinished())
-    {
-        m_error = QString("stopWlan Error: %1").arg(stop_wlan.errorString());
-        emit errorChanged();
-    }
+        setError(QString("stopWlan Error: %1").arg(stop_wlan.errorString()));
     stop_wlan.close();
 }
 
@@ -71,13 +64,12 @@ void Wireless::setNetworkWireless(QJsonObject data)
 
     if (!validateFieldsNetworkWireless(data))
     {
-        m_error = QString("setNetworkWireless Error: Campo ESSID ou password não informado");
+        setError(QString("setNetworkWireless Error: Campo ESSID ou password não informado"));
         return;
     }
     if (data.value("ESSID").toString() == "" || data.value("password").toString() == "")
     {
-        m_error = QString("setNetworkWireless Error: ESSID ou senha em branco");
-        emit errorChanged();
+        setError(QString("setNetworkWireless Error: ESSID ou senha em branco"));
         return;
     }
 
@@ -85,10 +77,7 @@ void Wireless::setNetworkWireless(QJsonObject data)
     write_network_wireless.start(command);
 
     if (!write_network_wireless.waitForFinished())
-    {
-        m_error = QString("setNetworkWireless Error: %1").arg(write_network_wireless.errorString());
-        emit errorChanged();
-    }
+        setError(QString("setNetworkWireless Error: %1").arg(write_network_wireless.errorString()));
     else
     {
         QString contentWpaSupplicant;
@@ -103,8 +92,7 @@ void Wireless::setNetworkWireless(QJsonObject data)
             QRegularExpressionMatch match_errorMsg = errorMsg.match(line);
             if (match_errorMsg.hasMatch())
             {
-                m_error =QString("stopWlan Error: %1").arg(match_errorMsg.captured());
-                emit errorChanged();
+                setError(QString("stopWlan Error: %1").arg(match_errorMsg.captured()));
                 break;
             }
 
@@ -146,22 +134,19 @@ bool Wireless::writeWpaSupplicant(QString data)
     QFile file_wpa_supplicant(m_wpa_supplicant);
     if (!file_wpa_supplicant.open(QIODevice::WriteOnly))
     {
-        m_error = QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString());
-        emit errorChanged();
+        setError(QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString()));
         return false;
     }
     if (!file_wpa_supplicant.write(data.toUtf8(), data.length()))
     {
-        m_error = QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString());
-        emit errorChanged();
+        setError(QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString()));
         file_wpa_supplicant.close();
         return false;
     }
     file_wpa_supplicant.close();
     if (file_wpa_supplicant.isOpen())
     {
-        m_error = QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString());
-        emit errorChanged();
+        setError(QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString()));
         return false;
     }
     return true;
@@ -352,10 +337,7 @@ const QString Wireless::getSSID(QString iface)
     process.start(command);
 
     if (!process.waitForFinished())
-    {
-        m_error = QString("getSSID Error: %1").arg(process.errorString());
-        emit errorChanged();
-    }
+        setError(QString("getSSID Error: %1").arg(process.errorString()));
     else
     {
         QString result = process.readAll();

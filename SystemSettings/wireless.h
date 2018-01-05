@@ -8,18 +8,18 @@
 #include <QProcess>
 #include <QTimer>
 #include "databasesettings.h"
+#include "logs.h"
 
-class Wireless : public QObject
+class Wireless : public Logs
 {
     Q_OBJECT
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(QJsonObject info READ info NOTIFY infoChanged)
     Q_PROPERTY(QString interface READ interface WRITE setInterface NOTIFY interfaceChanged)
     Q_PROPERTY(QList<QVariant> network_list READ network_list NOTIFY network_listChanged)
-    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
 
 public:
-    explicit Wireless(QObject *parent = nullptr);
+    explicit Wireless();
     ~Wireless();
     /**
      * @brief starts the network interface
@@ -54,11 +54,6 @@ public:
      * @brief returns the status of busy
      */
     bool busy() { return m_busy; }
-    /**
-     * @brief returns the error message
-     * @return
-     */
-    QString error() { return m_error; }
 
 Q_SIGNALS:
     /**
@@ -77,10 +72,6 @@ Q_SIGNALS:
      * @brief emits the signal that the status has been updated
      */
     void busyChanged();
-    /**
-     * @brief emits the signal that some error has occurred
-     */
-    void errorChanged();
 
 public slots:
     /**
@@ -157,7 +148,6 @@ private:
 
     QJsonObject m_info;
     QString m_wifi_connected = "off/any";
-    QString m_error = "";
 
     QProcess scan_wireless;
     QList<QVariant> m_network_list;

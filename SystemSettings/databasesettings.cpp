@@ -6,8 +6,8 @@
 #include <QtSql/QSqlRecord>
 
 
-DatabaseSettings::DatabaseSettings(QString table, QObject *parent) :
-    QObject(parent), m_database(QSqlDatabase::addDatabase("QSQLITE"))
+DatabaseSettings::DatabaseSettings(QString table) :
+    m_database(QSqlDatabase::addDatabase("QSQLITE"))
 {
     m_database_file = QString("%1/%2.sql").arg(m_path_database).arg(table);
     m_table = table;
@@ -23,10 +23,7 @@ void DatabaseSettings::openDatabaseSettings()
 {
     m_database.setDatabaseName(m_database_file);
     if (!m_database.open())
-    {
-        m_error = QString("DatabaseSettings Error: %1").arg(m_database.lastError().text());
-        emit errorChanged();
-    }
+        setError(QString("DatabaseSettings Error: %1").arg(m_database.lastError().text()));
     else
         createTable();
 }
@@ -39,16 +36,12 @@ void DatabaseSettings::createTable()
         QFile sql_file(QString("%1/sql/%2.sql").arg(m_etc).arg(m_table));
         if (!sql_file.open(QIODevice::ReadOnly))
         {
-            m_error = QString("createTable error: %1 [%2]").arg(sql_file.errorString()).arg(m_table);
-            emit errorChanged();
+            setError(QString("createTable error: %1 [%2]").arg(sql_file.errorString()).arg(m_table));
             return;
         }
         QSqlQuery sql_create_table(sql_file.readAll());
         if (!sql_create_table.exec())
-        {
-            m_error = QString("createTable error: %1").arg(sql_create_table.lastError().text());
-            emit errorChanged();
-        }
+            setError(QString("createTable error: %1").arg(sql_create_table.lastError().text()));
     }
 }
 
@@ -74,8 +67,7 @@ bool DatabaseSettings::save(QJsonObject data)
 
     if (!query.exec())
     {
-        m_error = QString("save error: %1").arg(query.lastError().text());
-        emit errorChanged();
+        setError(QString("save error: %1").arg(query.lastError().text()));
         return false;
     }
     return true;
@@ -88,8 +80,7 @@ bool DatabaseSettings::remove(quint32 id)
     query.bindValue(0, id);
     if (!query.exec())
     {
-        m_error = QString("remove error: %1").arg(query.lastError().text());
-        emit errorChanged();
+        setError(QString("remove error: %1").arg(query.lastError().text()));
         return false;
     }
     return (query.numRowsAffected())? true : false;
@@ -102,8 +93,7 @@ QList<QJsonObject> DatabaseSettings::get(QStringList fields, QString where)
     query.prepare(QString("SELECT %1 FROM %2 %3").arg(fields.join(", ")).arg(m_table).arg(where));
     if (!query.exec())
     {
-        m_error = QString("get error: %1").arg(query.lastError().text());
-        emit errorChanged();
+        setError(QString("get error: %1").arg(query.lastError().text()));
         return list;
     }
 

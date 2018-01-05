@@ -1,8 +1,9 @@
 #include "screen.h"
 #include <QFile>
 #include <QProcess>
+#include <QDebug>
 
-Screen::Screen(QObject *parent) : QObject(parent)
+Screen::Screen()
 {
     getBrightness();
 }
@@ -14,10 +15,7 @@ void Screen::setBrightness(quint16 _brightness)
     process.start(command);
 
     if (!process.waitForFinished())
-    {
-        m_error = QString("setBrightness error: %1").arg(process.errorString());
-        emit errorChanged();
-    }
+        setError(QString("setBrightness error: %1").arg(process.errorString()));
     else
     {
         m_brightness = _brightness;
@@ -31,8 +29,7 @@ void Screen::getBrightness()
     QFile brightness_file(m_file_brightness);
     if (!brightness_file.open(QIODevice::ReadOnly))
     {
-        m_error = QString("brightness error: %1").arg(brightness_file.errorString());
-        emit errorChanged();
+        setError(QString("brightness error: %1").arg(brightness_file.errorString()));
         return;
     }
     m_brightness = brightness_file.readLine().toUInt();

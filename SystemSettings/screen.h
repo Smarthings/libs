@@ -2,25 +2,21 @@
 #define SCREEN_H
 
 #include <QObject>
+#include "logs.h"
 
-class Screen : public QObject
+class Screen : public Logs
 {
     Q_OBJECT
     Q_PROPERTY(quint16 brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
-    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
 
 public:
-    explicit Screen(QObject *parent = nullptr);
+    explicit Screen();
 
 signals:
     /**
      * @brief emit signal chage brightness
      */
     void brightnessChanged();
-    /**
-     * @brief emit signal error
-     */
-    void errorChanged();
 
 public slots:
     /**
@@ -32,10 +28,6 @@ public slots:
      * @param quint16 _brightness : brightness number
      */
     void setBrightness(quint16 _brightness);
-    /**
-     * @brief get message error
-     */
-    QString error() { return m_error; }
 
 private slots:
     /**
@@ -45,7 +37,6 @@ private slots:
 
 protected:
     const QString m_file_brightness = "/sys/class/backlight/rpi_backlight/brightness";
-    QString m_error = "";
     quint16 m_brightness = 20;
 };
 

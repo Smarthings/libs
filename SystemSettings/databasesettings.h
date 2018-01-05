@@ -5,18 +5,18 @@
 #include <QtSql/QSqlDatabase>
 #include <QJsonObject>
 #include <QList>
+#include "logs.h"
 
-class DatabaseSettings : public QObject
+class DatabaseSettings : public Logs
 {
     Q_OBJECT
-    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
 
 public:
     /**
      * @brief prepare variable for address of database and table name
      * @param QString table : table name
      */
-    explicit DatabaseSettings(QString table, QObject *parent = nullptr);
+    explicit DatabaseSettings(QString table);
     ~DatabaseSettings();
     /**
      * @brief get JSON list of query
@@ -36,16 +36,8 @@ public:
     bool remove(quint32 id);
 
 signals:
-    /**
-     * @brief emit error signal of query
-     */
-    void errorChanged();
 
 public slots:
-    /**
-     * @brief return string of error
-     */
-    QString error() { return m_error; }
     /**
      * @brief open database. If open, run createTable
      */
@@ -59,7 +51,6 @@ protected:
 
 private:
     QSqlDatabase m_database;
-    QString m_error = "";
 
     const QString m_etc = "/etc/HomeThings";
     const QString m_path_database = "/tmp";

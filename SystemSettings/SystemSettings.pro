@@ -28,14 +28,16 @@ SOURCES += \
         systemsettings.cpp \
         wireless.cpp \
     databasesettings.cpp \
-    screen.cpp
+    screen.cpp \
+    logs.cpp
 
 HEADERS += \
         systemsettings.h \
         systemsettings_global.h \ 
         wireless.h \
     databasesettings.h \
-    screen.h
+    screen.h \
+    logs.h
 
 DISTFILES += \
     sql/Wireless.sql
