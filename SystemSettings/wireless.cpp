@@ -226,6 +226,13 @@ void Wireless::scanWireless()
     scan_wireless.start(command);
 }
 
+bool Wireless::forgetWirelessNetwork(quint32 id)
+{
+    bool query = db->remove(id);
+    getSettings(m_fields, "");
+    return query;
+}
+
 void Wireless::parseScanWireless(int status)
 {
     m_network_list.clear();

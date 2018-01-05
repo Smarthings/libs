@@ -110,10 +110,11 @@ public slots:
      */
     void scanWireless();
     /**
-     * @brief delete wireless network of table
-     * @param  quint32 id : id of wireless network
+     * @brief forget wireless network
+     * @param quint32 id : id of wireless network
      */
-    bool deleteSettings(quint32 id);
+    bool forgetWirelessNetwork(quint32 id);
+
 
 protected slots:
     /**
@@ -131,6 +132,11 @@ protected slots:
      * @param QJsonObject data : SSID and password in JSON format
      */
     bool saveSettings(QJsonObject data);
+    /**
+     * @brief delete wireless network of table
+     * @param  quint32 id : id of wireless network
+     */
+    bool deleteSettings(quint32 id);
     /**
      * @brief get list of wireless network saved
      * @param QStringList fields : list of field names of wireless table
