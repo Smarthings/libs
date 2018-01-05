@@ -29,7 +29,7 @@ public slots:
     quint16 brightness() { return m_brightness; }
     /**
      * @brief setBrightness
-     * @param qiont16 _brightness : brightness number
+     * @param quint16 _brightness : brightness number
      */
     void setBrightness(quint16 _brightness);
     /**
