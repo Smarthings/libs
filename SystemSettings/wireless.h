@@ -55,7 +55,7 @@ public:
      */
     bool busy() { return m_busy; }
 
-Q_SIGNALS:
+signals:
     /**
      * @brief emits the signal that the info variable has been updated
      */

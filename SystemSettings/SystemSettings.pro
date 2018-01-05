@@ -29,7 +29,8 @@ SOURCES += \
         wireless.cpp \
     databasesettings.cpp \
     screen.cpp \
-    logs.cpp
+    logs.cpp \
+    network.cpp
 
 HEADERS += \
         systemsettings.h \
@@ -37,7 +38,8 @@ HEADERS += \
         wireless.h \
     databasesettings.h \
     screen.h \
-    logs.h
+    logs.h \
+    network.h
 
 DISTFILES += \
     sql/Wireless.sql

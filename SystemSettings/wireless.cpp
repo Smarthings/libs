@@ -17,8 +17,8 @@ Wireless::Wireless() :
     connect(timer, SIGNAL(timeout()), this, SLOT(scanWireless()), Qt::UniqueConnection);
     timer->start(m_scan_time);
 
-    db->openDatabaseSettings();
-    getSettings(m_fields, "");
+    //db->openDatabaseSettings();
+    //getSettings(m_fields, "");
 }
 
 Wireless::~Wireless()
