@@ -27,13 +27,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         systemsettings.cpp \
         wireless.cpp \
-    databasesettings.cpp
+    databasesettings.cpp \
+    screen.cpp
 
 HEADERS += \
         systemsettings.h \
         systemsettings_global.h \ 
         wireless.h \
-    databasesettings.h
+    databasesettings.h \
+    screen.h
 
 DISTFILES += \
     sql/Wireless.sql
