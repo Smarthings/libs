@@ -109,6 +109,11 @@ public slots:
      * @brief scan the wireless network. It is executed by a time in construct
      */
     void scanWireless();
+    /**
+     * @brief delete wireless network of table
+     * @param  quint32 id : id of wireless network
+     */
+    bool deleteSettings(quint32 id);
 
 protected slots:
     /**
@@ -122,29 +127,21 @@ protected slots:
      */
     void busyIndicator(bool status);
     /**
-     * @brief saveSettings
-     * @param table
-     * @param data
+     * @brief save the data (SSID and Password) in table Wireless
+     * @param QJsonObject data : SSID and password in JSON format
      */
-    void saveSettings(QJsonObject data);
+    bool saveSettings(QJsonObject data);
     /**
-     * @brief getSettings
-     * @param fields
-     * @param where
+     * @brief get list of wireless network saved
+     * @param QStringList fields : list of field names of wireless table
+     * @param QString where : string with the where of query
      */
     void getSettings(QStringList fields, QString where);
     /**
-     * @brief deleteSettings
-     * @param id
-     * @return
+     * @brief check if of name wireless network it is in list. Return list with id and SSID
+     * @param QString ssid : name wireless network
      */
-    bool deleteSettings(quint32 id);
-    /**
-     * @brief checkSaved
-     * @param ssid
-     * @return
-     */
-    QStringList checkSaved(QString ssid);
+    const QStringList checkSaved(QString ssid);
 
 private:
     QString m_interface = "";
