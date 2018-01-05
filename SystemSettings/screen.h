@@ -31,7 +31,7 @@ public slots:
      * @brief setBrightness
      * @param qiont16 _brightness : brightness number
      */
-    quint16 setBrightness(quint16 _brightness);
+    void setBrightness(quint16 _brightness);
     /**
      * @brief get message error
      */

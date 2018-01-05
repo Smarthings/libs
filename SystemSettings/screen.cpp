@@ -7,7 +7,7 @@ Screen::Screen(QObject *parent) : QObject(parent)
     getBrightness();
 }
 
-quint16 Screen::setBrightness(quint16 _brightness)
+void Screen::setBrightness(quint16 _brightness)
 {
     QString command = QString("/bin/bash -c \"echo %1 > /%2\"").arg(_brightness).arg(m_file_brightness);
     QProcess process;
