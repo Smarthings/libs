@@ -8,7 +8,7 @@ QT       += network core sql
 CONFIG += c++11
 QT       -= gui
 
-TARGET = SystemSettings
+TARGET = HtSystem
 TEMPLATE = lib
 
 DEFINES += SYSTEMSETTINGS_LIBRARY
@@ -42,7 +42,12 @@ HEADERS += \
     network.h
 
 DISTFILES += \
-    sql/Wireless.sql
+    sql/Wireless.sql \
+    sql/Network.sql
+
+SQLFILES += \
+    sql/Wireless.sql \
+    sql/Network.sql
 
 unix {
     headers.path = /usr/lib/HomeThings
@@ -50,7 +55,7 @@ unix {
     target.path = /usr/lib
 
     sql_files.path = /etc/HomeThings/sql
-    sql_files.files = sql/Wireless.sql
+    sql_files.files = $$SQLFILES
 
     INSTALLS += target
     INSTALLS += headers

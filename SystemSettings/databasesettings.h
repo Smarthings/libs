@@ -30,6 +30,12 @@ public:
      */
     bool save(QJsonObject data);
     /**
+     * @brief update data
+     * @param qint32 id : identification of the row to be changed
+     * @param QJsonObject data : JSON list of data (field: value)
+     */
+    bool update(qint32 id, QJsonObject data);
+    /**
      * @brief remove a value of table
      * @param quint32 id : ID of row to remove
      */

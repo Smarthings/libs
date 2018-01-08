@@ -76,6 +76,37 @@ bool DatabaseSettings::save(QJsonObject data)
     return true;
 }
 
+bool DatabaseSettings::update(qint32 id, QJsonObject data)
+{
+    QString update_query = QString("UPDATE %1 SET ").arg(m_table);
+    QSqlQuery query(m_database);
+    QStringList prepare_values;
+
+    for (const auto &field : data.keys())
+        prepare_values.append(QString("%1=:%1").arg(field));
+
+    query.prepare(QString("%1 %2 WHERE id=%3").arg(update_query).arg(prepare_values.join(", ")).arg(id));
+
+    quint32 i = 0;
+    for (const auto &value : data)
+    {
+        query.bindValue(i, value.toString());
+        ++i;
+    }
+
+    if (!query.exec())
+    {
+        setError(QString("update error: %1").arg(query.lastError().text()));
+        return false;
+    }
+    if (!query.numRowsAffected())
+    {
+        setError(QString("update error: Nenhuma linha alterada"));
+        return false;
+    }
+    return true;
+}
+
 bool DatabaseSettings::remove(quint32 id)
 {
     QSqlQuery query(m_database);
