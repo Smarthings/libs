@@ -33,18 +33,18 @@ public:
      * @brief set network wireless. Receives the ESSID of the network and the password and run the wpa_passphrase command to obtain the output to the file wpa_supplicant.conf
      * @param QJSonObject data : data in JSON format with network ESSID and password
      */
-    void setNetworkWireless(QJsonObject data);
+    void setNetworkWireless(QJsonObject &data);
     /**
      * @brief validate ESSID fields and password
      * @param QJsonData data : fields = ESSID, password
      */
-    bool validateFieldsNetworkWireless(QJsonObject &data);
+    bool validateFieldsNetworkWireless(QJsonObject data);
     /**
      * @brief Write the contents of the wpa_passphrase() command in the wpa_supplicant file
      * @param QString data : content of wpa_passphrase() command
      * @return return status of writing wpa_supplicant.conf file
      */
-    bool writeWpaSupplicant(QString data);
+    bool writeWpaSupplicant(QString &data);
     /**
      * @brief returns a list with available networks
      * @return
@@ -86,7 +86,7 @@ public slots:
      * @brief get network SSID
      * @param QString iface : interface name
      */
-    const QString getSSID(QString iface);
+    const QString getSSID(QString &iface);
     /**
      * @brief defines the interface name
      * @param QString iface : interface name
@@ -104,7 +104,7 @@ public slots:
      * @brief forget wireless network
      * @param quint32 id : id of wireless network
      */
-    bool forgetWirelessNetwork(quint32 id);
+    bool forgetWirelessNetwork(quint32 &id);
 
 
 protected slots:
@@ -122,18 +122,18 @@ protected slots:
      * @brief save the data (SSID and Password) in table Wireless
      * @param QJsonObject data : SSID and password in JSON format
      */
-    bool saveSettings(QJsonObject data);
+    bool saveSettings(QJsonObject &data);
     /**
      * @brief delete wireless network of table
      * @param  quint32 id : id of wireless network
      */
-    bool deleteSettings(quint32 id);
+    bool deleteSettings(quint32 &id);
     /**
      * @brief get list of wireless network saved
      * @param QStringList fields : list of field names of wireless table
      * @param QString where : string with the where of query
      */
-    void getSettings(QStringList fields, QString where);
+    void getSettings(QStringList &fields, QString where);
     /**
      * @brief check if of name wireless network it is in list. Return list with id and SSID
      * @param QString ssid : name wireless network

@@ -23,23 +23,23 @@ public:
      * @param QStringList fields : list with fields name
      * @param QString where : string of where for query
      */
-    QList<QJsonObject> get(QStringList fields, QString where);
+    QList<QJsonObject> get(QStringList &fields, QString where);
     /**
      * @brief save data
      * @param QJsonObject data : JSON list of data (field : value)
      */
-    bool save(QJsonObject data);
+    bool save(QJsonObject &data);
     /**
      * @brief update data
      * @param qint32 id : identification of the row to be changed
      * @param QJsonObject data : JSON list of data (field: value)
      */
-    bool update(qint32 id, QJsonObject data);
+    bool update(qint32 &id, QJsonObject &data);
     /**
      * @brief remove a value of table
      * @param quint32 id : ID of row to remove
      */
-    bool remove(quint32 id);
+    bool remove(quint32 &id);
 
 signals:
 

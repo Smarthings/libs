@@ -48,7 +48,7 @@ void DatabaseSettings::createTable()
     }
 }
 
-bool DatabaseSettings::save(QJsonObject data)
+bool DatabaseSettings::save(QJsonObject &data)
 {
     QString insert_query = QString("INSERT INTO %1").arg(m_table);
     QString fields_name = "(", fields_value = "VALUES (";
@@ -76,7 +76,7 @@ bool DatabaseSettings::save(QJsonObject data)
     return true;
 }
 
-bool DatabaseSettings::update(qint32 id, QJsonObject data)
+bool DatabaseSettings::update(qint32 &id, QJsonObject &data)
 {
     QString update_query = QString("UPDATE %1 SET ").arg(m_table);
     QSqlQuery query(m_database);
@@ -107,7 +107,7 @@ bool DatabaseSettings::update(qint32 id, QJsonObject data)
     return true;
 }
 
-bool DatabaseSettings::remove(quint32 id)
+bool DatabaseSettings::remove(quint32 &id)
 {
     QSqlQuery query(m_database);
     query.prepare(QString("DELETE FROM %1 WHERE id=:id").arg(m_table));
@@ -120,7 +120,7 @@ bool DatabaseSettings::remove(quint32 id)
     return (query.numRowsAffected())? true : false;
 }
 
-QList<QJsonObject> DatabaseSettings::get(QStringList fields, QString where)
+QList<QJsonObject> DatabaseSettings::get(QStringList &fields, QString where)
 {
     QList<QJsonObject> list;
     QSqlQuery query(m_database);

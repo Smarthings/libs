@@ -55,7 +55,7 @@ void Wireless::stopWlan()
     stop_wlan.close();
 }
 
-void Wireless::setNetworkWireless(QJsonObject data)
+void Wireless::setNetworkWireless(QJsonObject &data)
 {
     busyIndicator(true);
     QString command = QString("wpa_passphrase \"%1\" \"%2\"")
@@ -106,7 +106,10 @@ void Wireless::setNetworkWireless(QJsonObject data)
 
             QRegularExpressionMatch match_psk = psk.match(line);
             if (match_psk.hasMatch())
-                saveSettings({{"ssid", data.value("ESSID").toString()}, {"pass_crypt", QString(match_psk.captured()).split("=")[1]}});
+            {
+                QJsonObject data_ssid = {{"ssid", data.value("ESSID").toString()}, {"pass_crypt", QString(match_psk.captured()).split("=")[1]}};
+                saveSettings(data_ssid);
+            }
 
             contentWpaSupplicant.append(line);
         }
@@ -122,14 +125,14 @@ void Wireless::setNetworkWireless(QJsonObject data)
     busyIndicator(false);
 }
 
-bool Wireless::validateFieldsNetworkWireless(QJsonObject &data)
+bool Wireless::validateFieldsNetworkWireless(QJsonObject data)
 {
     if (data.contains("ESSID") || data.contains("password"))
         return true;
     return false;
 }
 
-bool Wireless::writeWpaSupplicant(QString data)
+bool Wireless::writeWpaSupplicant(QString &data)
 {
     QFile file_wpa_supplicant(m_wpa_supplicant);
     if (!file_wpa_supplicant.open(QIODevice::WriteOnly))
@@ -159,7 +162,7 @@ const QJsonObject Wireless::info()
 
 void Wireless::setInterface(QString iface)
 {
-    m_interface = iface;
+    m_interface = std::move(iface);
     emit interfaceChanged();
 }
 
@@ -193,7 +196,8 @@ void Wireless::abstractInfo()
 
                     obj.insert("ipv6", ipv6);
                 }
-                obj.insert("ssid", getSSID(std::move(iface.name())));
+                QString iface_name = iface.name();
+                obj.insert("ssid", getSSID(iface_name));
             }
             m_info.insert(iface.name(), obj);
         }
@@ -211,7 +215,7 @@ void Wireless::scanWireless()
     scan_wireless.start(command);
 }
 
-bool Wireless::forgetWirelessNetwork(quint32 id)
+bool Wireless::forgetWirelessNetwork(quint32 &id)
 {
     bool query = db->remove(id);
     getSettings(m_fields, "");
@@ -297,19 +301,19 @@ void Wireless::busyIndicator(bool status)
     emit busyChanged();
 }
 
-bool Wireless::saveSettings(QJsonObject data)
+bool Wireless::saveSettings(QJsonObject &data)
 {
     bool query = db->save(data);
     getSettings(m_fields, "");
     return query;
 }
 
-void Wireless::getSettings(QStringList fields,  QString where)
+void Wireless::getSettings(QStringList &fields,  QString where)
 {
     m_list_settings_saved = db->get(fields, where);
 }
 
-bool Wireless::deleteSettings(quint32 id)
+bool Wireless::deleteSettings(quint32 &id)
 {
     bool query = db->remove(id);
     getSettings(m_fields, "");
@@ -330,7 +334,7 @@ const QStringList Wireless::checkSaved(QString ssid)
     return list;
 }
 
-const QString Wireless::getSSID(QString iface)
+const QString Wireless::getSSID(QString &iface)
 {
     QString command = QString("iwconfig %1").arg(iface);
     QProcess process;

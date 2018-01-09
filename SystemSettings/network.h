@@ -15,14 +15,14 @@ public:
     explicit Network();
     ~Network();
 
-    bool setAddress(QJsonObject data);
+    bool setAddress(QJsonObject &data);
 
 signals:
 
 public slots:
 
 protected slots:
-    void getAddress(QStringList fields, QString where);
+    void getAddress(QStringList &fields, QString where);
 
 private:
     QStringList m_interface;
@@ -33,7 +33,7 @@ private:
     DatabaseSettings *db = new DatabaseSettings(m_table);
 
     QList<QJsonObject> m_list_network_address;
-    QStringList m_fields = {"id", "wlan0", "method", "status", "ip_version", "address", "mask", "gateway"};
+    QStringList m_fields = {"id", "interface", "method", "status", "ip_version", "address", "mask", "gateway"};
 };
 
 #endif // NETWORK_H

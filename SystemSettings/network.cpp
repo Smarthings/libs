@@ -1,5 +1,6 @@
 #include "network.h"
 #include <QDebug>
+#include <iostream>
 
 Network::Network()
 {
@@ -11,12 +12,12 @@ Network::~Network()
     delete db;
 }
 
-void Network::getAddress(QStringList fields, QString where)
+void Network::getAddress(QStringList &fields, QString where)
 {
     m_list_network_address = db->get(fields, where);
 }
 
-bool Network::setAddress(QJsonObject data)
+bool Network::setAddress(QJsonObject &data)
 {
     bool query = false;
     if (!data.contains("id"))
@@ -28,6 +29,6 @@ bool Network::setAddress(QJsonObject data)
         query = db->update(id, data);
     }
     if (query)
-        getAddress(m_fields, "");
+        getAddress(m_fields, QString(""));
     return query;
 }
