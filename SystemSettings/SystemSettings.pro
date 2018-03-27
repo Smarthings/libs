@@ -30,7 +30,8 @@ SOURCES += \
     databasesettings.cpp \
     screen.cpp \
     logs.cpp \
-    network.cpp
+    network.cpp \
+    info.cpp
 
 HEADERS += \
         systemsettings.h \
@@ -39,7 +40,8 @@ HEADERS += \
     databasesettings.h \
     screen.h \
     logs.h \
-    network.h
+    network.h \
+    info.h
 
 DISTFILES += \
     sql/Wireless.sql \
@@ -50,9 +52,22 @@ SQLFILES += \
     sql/Network.sql
 
 unix {
-    headers.path = /usr/lib/HomeThings
+    headers.path = /usr/local/lib/HomeThings
     headers.files = $$HEADERS
     target.path = /usr/lib
+
+    sql_files.path = /etc/HomeThings/sql
+    sql_files.files = $$SQLFILES
+
+    INSTALLS += target
+    INSTALLS += headers
+    INSTALLS += sql_files
+}
+
+macx {
+    headers.path = /usr/local/lib/HomeThings
+    headers.files = $$HEADERS
+    target.path = /usr/local/lib
 
     sql_files.path = /etc/HomeThings/sql
     sql_files.files = $$SQLFILES
