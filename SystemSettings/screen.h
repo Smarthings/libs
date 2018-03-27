@@ -36,7 +36,8 @@ private slots:
     void getBrightness();
 
 protected:
-    const QString m_file_brightness = "/sys/class/backlight/rpi_backlight/brightness";
+    //const QString m_file_brightness = "/sys/class/backlight/rpi_backlight/brightness";
+    const QString m_file_brightness = "/tmp/brightness";
     quint16 m_brightness = 20;
 };
 

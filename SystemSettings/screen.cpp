@@ -16,22 +16,21 @@ void Screen::setBrightness(quint16 _brightness)
 
     if (!process.waitForFinished())
         setError(QString("setBrightness error: %1").arg(process.errorString()));
-    else
-    {
-        m_brightness = _brightness;
-        emit brightnessChanged();
-    }
     process.close();
 }
 
 void Screen::getBrightness()
 {
-    QFile brightness_file(m_file_brightness);
-    if (!brightness_file.open(QIODevice::ReadOnly))
+    QString command = QString("/bin/bash -c \"cat %1\"").arg(m_file_brightness);
+    QProcess proccess;
+    proccess.start(command);
+
+    if (!proccess.waitForFinished())
+        setError(QString("getBrightness error: %1").arg(proccess.errorString()));
+    else
     {
-        setError(QString("brightness error: %1").arg(brightness_file.errorString()));
-        return;
+        m_brightness = proccess.readLine().trimmed().toUInt();
+        emit brightnessChanged();
     }
-    m_brightness = brightness_file.readLine().toUInt();
-    emit brightnessChanged();
+    proccess.close();
 }
