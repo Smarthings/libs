@@ -17,6 +17,7 @@ public:
 signals:
 
 public slots:
+    void restartSystem();
 };
 
 #endif // INFO_H

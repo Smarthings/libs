@@ -1,5 +1,6 @@
 #include "systemsettings.h"
 #include <QNetworkInterface>
+#include <QProcess>
 #include <QDebug>
 
 SystemSettings::SystemSettings()

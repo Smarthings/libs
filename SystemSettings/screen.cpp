@@ -22,7 +22,7 @@ void Screen::setBrightness(quint16 _brightness)
     process.close();
 }
 
-void Screen::setRotation(quint16 _rotation)
+bool Screen::setRotation(quint16 _rotation)
 {
     QString lcd_rotate = QString("lcd_rotate=%1").arg(_rotation? 2 : 0);
     QFile file(m_file_config);
@@ -47,8 +47,14 @@ void Screen::setRotation(quint16 _rotation)
         file.write(file_content.toUtf8());
 
         file.flush();
+        file.close();
+        return true;
     }
+    m_rotation = !_rotation;
+    emit rotationChanged();
+
     file.close();
+    return false;
 }
 
 void Screen::getBrightness()
