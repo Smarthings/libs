@@ -55,10 +55,10 @@ private slots:
     void getRotation();
 
 protected:
-    //const QString m_file_brightness = "/sys/class/backlight/rpi_backlight/brightness";
-    const QString m_file_brightness = "/tmp/brightness";
-    //const QString m_file_config = "/boot/config.txt";
-    const QString m_file_config = "/tmp/config.txt";
+    const QString m_file_brightness = "/sys/class/backlight/rpi_backlight/brightness";
+    const QString m_file_config = "/boot/config.txt";
+    //const QString m_file_brightness = "/tmp/brightness";
+    //const QString m_file_config = "/tmp/config.txt";
 
     quint16 m_brightness = 20;
     quint16 m_rotation = 0;
