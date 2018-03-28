@@ -6,6 +6,7 @@
 Screen::Screen()
 {
     getBrightness();
+    //getRotation();
 }
 
 void Screen::setBrightness(quint16 _brightness)
@@ -17,6 +18,11 @@ void Screen::setBrightness(quint16 _brightness)
     if (!process.waitForFinished())
         setError(QString("setBrightness error: %1").arg(process.errorString()));
     process.close();
+}
+
+void Screen::setRotation(quint16 _rotation)
+{
+    qDebug() << _rotation;
 }
 
 void Screen::getBrightness()
@@ -33,4 +39,16 @@ void Screen::getBrightness()
         emit brightnessChanged();
     }
     proccess.close();
+}
+
+void Screen::getRotation()
+{
+    /*QFile file(m_file_config);
+    if (!file.open(QIODevice::ReadOnly))
+        setError(QString("getRotation error: %1").arg(file.errorString()));
+    else
+    {
+        qDebug() << file.readAll();
+    }
+    file.close();*/
 }
