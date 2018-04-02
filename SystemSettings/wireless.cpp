@@ -350,5 +350,6 @@ const QString Wireless::getSSID(QString &iface)
         if (match_SSID.hasMatch())
             return QString(match_SSID.captured()).replace("\"", "").replace(" ", "").split(":").at(1);
     }
+    process.close();
     return QString("");
 }

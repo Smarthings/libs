@@ -155,7 +155,12 @@ private:
     bool m_busy_scan = false;
     bool m_busy = false;
 
+//    const QString m_wpa_supplicant = "/etc/wpa_supplicant/wpa_supplicant.conf";
+//    const QString m_interfaces = "/etc/network/interfaces";
+
     const QString m_wpa_supplicant = "/tmp/wpa_supplicant.conf";
+    const QString m_interfaces = "/tmp/interfaces";
+
     const QString m_table = "Wireless";
     QList<QJsonObject> m_list_settings_saved;
 
