@@ -33,11 +33,12 @@ public:
      */
     void stopInterface(QString interface);
 
-signals:
-
 public slots:
-
-protected slots:
+    /**
+     * @brief abstractInterface
+     * @param interface
+     */
+    void abstractInterface(QString interface);
 
 protected:
     /**

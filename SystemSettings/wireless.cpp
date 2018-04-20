@@ -8,7 +8,6 @@
 #include <QSqlRecord>
 #include <QSqlField>
 #include "wireless.h"
-#include "databasesettings.h"
 
 Wireless::Wireless() :
     timer(new QTimer)
@@ -184,6 +183,7 @@ void Wireless::abstractInfo()
                     ipv4.insert("address", addr.ip().toString());
                     ipv4.insert("netmask", addr.netmask().toString());
                     ipv4.insert("broadcast", addr.broadcast().toString());
+                    ipv4.insert("gateway", getGatewayIface(iface.name()));
 
                     obj.insert("ipv4", ipv4);
                 }
@@ -332,6 +332,36 @@ const QStringList Wireless::checkSaved(QString ssid)
         }
     }
     return list;
+}
+
+QString Wireless::getGatewayIface(QString iface)
+{
+    QString gateway = "";
+    QString command = QString("ip route show");
+    QProcess *process_addr = new QProcess();
+    process_addr->start(command);
+
+    QRegularExpression line_gateway(QString("default via (\\d+.\\d+.\\d+.\\d+) dev %1").arg(iface));
+    QRegularExpression get_gateway(QString("(\\d+.\\d+.\\d+.\\d+)"));
+    if (!process_addr->waitForFinished())
+        setError(QString("getGatewayIface error: %1").arg(process_addr->errorString()));
+    else
+    {
+        while (!process_addr->atEnd()) {
+            QString line = process_addr->readLine();
+            QRegularExpressionMatch match_gateway = line_gateway.match(line);
+            if (match_gateway.hasMatch())
+            {
+                QRegularExpressionMatch match_get_gateway = get_gateway.match(line);
+                if (match_get_gateway.hasMatch())
+                    return match_get_gateway.captured(0);
+            }
+        }
+    }
+
+    process_addr->close();
+
+    return gateway;
 }
 
 const QString Wireless::getSSID(QString &iface)

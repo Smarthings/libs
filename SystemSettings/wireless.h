@@ -140,6 +140,8 @@ protected slots:
      */
     const QStringList checkSaved(QString ssid);
 
+    QString getGatewayIface(QString iface);
+
 private:
     QString m_interface = "";
 

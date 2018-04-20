@@ -4,6 +4,8 @@
 #include <QProcess>
 #include <QTextStream>
 #include <iostream>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
 
 Network::Network()
 {
@@ -116,4 +118,33 @@ void Network::stopInterface(QString interface)
     if (!start_interface.waitForFinished())
         setError(QString("stopInterface error: %1").arg(start_interface.errorString()));
     start_interface.close();
+}
+
+void Network::abstractInterface(QString interface)
+{
+    QString command = QString("ip addr show %1").arg(interface).trimmed();
+    QProcess *process_addr = new QProcess();
+    process_addr->start(command);
+
+    QRegularExpression inet("inet (\\w+.\\w+.\\w+.\\w+)");
+    QRegularExpression broadcast("brd (\\w+.\\w+.\\w+.\\w+)");
+
+    if (!process_addr->waitForFinished())
+        setError(QString("abstractInfo error: %1").arg(process_addr->errorString()));
+    else
+    {
+        while (!process_addr->atEnd()) {
+            QString line = process_addr->readLine();
+
+            QRegularExpressionMatch match_inet = inet.match(line);
+            if (match_inet.hasMatch())
+                qDebug() << "IP" << match_inet.captured().replace("inet", "").trimmed();
+            QRegularExpressionMatch match_broadcast = broadcast.match(line);
+            if (match_broadcast.hasMatch())
+                qDebug() << "Broadcast" << match_broadcast.captured().replace("brd", "").trimmed();
+        }
+    }
+
+    process_addr->close();
+    delete process_addr;
 }
