@@ -17,6 +17,7 @@ class Wireless : public Logs
     Q_PROPERTY(QJsonObject info READ info NOTIFY infoChanged)
     Q_PROPERTY(QString interface READ interface WRITE setInterface NOTIFY interfaceChanged)
     Q_PROPERTY(QList<QVariant> network_list READ network_list NOTIFY network_listChanged)
+    Q_PROPERTY(QJsonObject networkWireless READ networkWireless WRITE setNetworkWireless NOTIFY networkWirelessChanged)
 
 public:
     explicit Wireless();
@@ -29,11 +30,6 @@ public:
      * @brief stop network interface
      */
     void stopWlan();
-    /**
-     * @brief set network wireless. Receives the ESSID of the network and the password and run the wpa_passphrase command to obtain the output to the file wpa_supplicant.conf
-     * @param QJSonObject data : data in JSON format with network ESSID and password
-     */
-    void setNetworkWireless(QJsonObject &data);
     /**
      * @brief validate ESSID fields and password
      * @param QJsonData data : fields = ESSID, password
@@ -73,6 +69,8 @@ signals:
      */
     void busyChanged();
 
+    void networkWirelessChanged();
+
 public slots:
     /**
      * @brief returns a JSON with the interface information
@@ -86,7 +84,14 @@ public slots:
      * @brief get network SSID
      * @param QString iface : interface name
      */
-    const QString getSSID(QString &iface);
+    const QString getSSID(QString iface);
+
+    QJsonObject networkWireless() { return m_network_wireless; }
+    /**
+     * @brief set network wireless. Receives the ESSID of the network and the password and run the wpa_passphrase command to obtain the output to the file wpa_supplicant.conf
+     * @param QJSonObject data : data in JSON format with network ESSID and password
+     */
+    void setNetworkWireless(QJsonObject data);
     /**
      * @brief defines the interface name
      * @param QString iface : interface name
@@ -104,7 +109,7 @@ public slots:
      * @brief forget wireless network
      * @param quint32 id : id of wireless network
      */
-    bool forgetWirelessNetwork(quint32 &id);
+    bool forgetWirelessNetwork(quint32 id);
 
 
 protected slots:
@@ -144,6 +149,7 @@ protected slots:
 
 private:
     QString m_interface = "";
+    QJsonObject m_network_wireless;
 
     QTimer *timer;
     const qint32 m_scan_time = 2500;

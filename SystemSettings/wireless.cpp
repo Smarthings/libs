@@ -32,12 +32,12 @@ void Wireless::startWlan()
         return;
 
     QString command = QString("/bin/sh \"ifup %1\"").arg(m_interface);
-    QProcess start_wlan;
-    start_wlan.start(command);
+    QProcess *start_wlan = new QProcess();
+    start_wlan->start(command);
 
-    if (!start_wlan.waitForFinished())
-        setError(QString("startWlan Error: %1").arg(start_wlan.errorString()));
-    start_wlan.close();
+    if (!start_wlan->waitForFinished())
+        setError(QString("startWlan Error: %1").arg(start_wlan->errorString()));
+    start_wlan->close();
 }
 
 void Wireless::stopWlan()
@@ -46,15 +46,16 @@ void Wireless::stopWlan()
         return;
 
     QString command = QString("/bin/sh -c \"ifdown %1\"").arg(m_interface);
-    QProcess stop_wlan;
-    stop_wlan.start(command);
+    QProcess *stop_wlan = new QProcess();
+    stop_wlan->start(command);
 
-    if (!stop_wlan.waitForFinished())
-        setError(QString("stopWlan Error: %1").arg(stop_wlan.errorString()));
-    stop_wlan.close();
+    if (!stop_wlan->waitForFinished())
+        setError(QString("stopWlan Error: %1").arg(stop_wlan->errorString()));
+    stop_wlan->close();
+    delete stop_wlan;
 }
 
-void Wireless::setNetworkWireless(QJsonObject &data)
+void Wireless::setNetworkWireless(QJsonObject data)
 {
     busyIndicator(true);
     QString command = QString("wpa_passphrase \"%1\" \"%2\"")
@@ -72,27 +73,28 @@ void Wireless::setNetworkWireless(QJsonObject &data)
         return;
     }
 
-    QProcess write_network_wireless;
-    write_network_wireless.start(command);
+    QProcess *write_network_wireless = new QProcess();
+    write_network_wireless->start(command);
 
-    if (!write_network_wireless.waitForFinished())
-        setError(QString("setNetworkWireless Error: %1").arg(write_network_wireless.errorString()));
+    if (!write_network_wireless->waitForFinished())
+        setError(QString("setNetworkWireless Error: %1").arg(write_network_wireless->errorString()));
     else
     {
         QString contentWpaSupplicant;
         QRegularExpression errorMsg("(Passphrase must be.*)");
         QRegularExpression sharpPsk("(#psk=.*)");
-        QRegularExpression psk("(psk=.*)");
+        //QRegularExpression psk("(psk=.*)");
 
-        while (!write_network_wireless.atEnd())
+        while (!write_network_wireless->atEnd())
         {
-            QString line = write_network_wireless.readLine();
+            QString line = write_network_wireless->readLine();
 
             QRegularExpressionMatch match_errorMsg = errorMsg.match(line);
             if (match_errorMsg.hasMatch())
             {
-                setError(QString("stopWlan Error: %1").arg(match_errorMsg.captured()));
-                break;
+                setError(QString("setNetworkWireless Error: %1").arg(match_errorMsg.captured()));
+                write_network_wireless->close();
+                return;
             }
 
             QRegularExpressionMatch match_sharpPsk = sharpPsk.match(line);
@@ -109,10 +111,10 @@ void Wireless::setNetworkWireless(QJsonObject &data)
                 QJsonObject data_ssid = {{"ssid", data.value("ESSID").toString()}, {"pass_crypt", QString(match_psk.captured()).split("=")[1]}};
                 saveSettings(data_ssid);
             }*/
-
             contentWpaSupplicant.append(line);
         }
-        write_network_wireless.close();
+        write_network_wireless->close();
+        delete write_network_wireless;
         if (writeWpaSupplicant(contentWpaSupplicant))
         {
             stopWlan();
@@ -120,7 +122,8 @@ void Wireless::setNetworkWireless(QJsonObject &data)
         }
         getSSID(m_interface);
     }
-
+    m_network_wireless.insert("status", true);
+    emit networkWirelessChanged();
     busyIndicator(false);
 }
 
@@ -215,7 +218,7 @@ void Wireless::scanWireless()
     scan_wireless.start(command);
 }
 
-bool Wireless::forgetWirelessNetwork(quint32 &id)
+bool Wireless::forgetWirelessNetwork(quint32 id)
 {
     /*bool query = db->remove(id);
     getSettings(m_fields, "");
@@ -367,7 +370,7 @@ QString Wireless::getGatewayIface(QString iface)
     return gateway;
 }
 
-const QString Wireless::getSSID(QString &iface)
+const QString Wireless::getSSID(QString iface)
 {
     QString command = QString("iwconfig %1").arg(iface);
     QProcess process;
