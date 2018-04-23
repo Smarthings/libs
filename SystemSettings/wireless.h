@@ -166,8 +166,8 @@ private:
     const QString m_table = "Wireless";
     QList<QJsonObject> m_list_settings_saved;
 
-    QStringList m_fields = {"id", "ssid", "pass_crypt"};
-    DatabaseSettings *db = new DatabaseSettings(m_table);
+    //QStringList m_fields = {"id", "ssid", "pass_crypt"};
+    //DatabaseSettings *db = new DatabaseSettings(m_table);
 };
 
 #endif // WIRELESS_H

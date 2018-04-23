@@ -22,7 +22,7 @@ Wireless::Wireless() :
 
 Wireless::~Wireless()
 {
-    delete db;
+    //delete db;
     delete timer;
 }
 
@@ -103,12 +103,12 @@ void Wireless::setNetworkWireless(QJsonObject &data)
                     continue;
             }
 
-            QRegularExpressionMatch match_psk = psk.match(line);
+            /*QRegularExpressionMatch match_psk = psk.match(line);
             if (match_psk.hasMatch())
             {
                 QJsonObject data_ssid = {{"ssid", data.value("ESSID").toString()}, {"pass_crypt", QString(match_psk.captured()).split("=")[1]}};
                 saveSettings(data_ssid);
-            }
+            }*/
 
             contentWpaSupplicant.append(line);
         }
@@ -217,9 +217,10 @@ void Wireless::scanWireless()
 
 bool Wireless::forgetWirelessNetwork(quint32 &id)
 {
-    bool query = db->remove(id);
+    /*bool query = db->remove(id);
     getSettings(m_fields, "");
-    return query;
+    return query;*/
+    return false;
 }
 
 void Wireless::parseScanWireless(int status)
@@ -303,21 +304,23 @@ void Wireless::busyIndicator(bool status)
 
 bool Wireless::saveSettings(QJsonObject &data)
 {
-    bool query = db->save(data);
+    /*bool query = db->save(data);
     getSettings(m_fields, "");
-    return query;
+    return query;*/
+    return false;
 }
 
 void Wireless::getSettings(QStringList &fields,  QString where)
 {
-    m_list_settings_saved = db->get(fields, where);
+    //m_list_settings_saved = db->get(fields, where);
 }
 
 bool Wireless::deleteSettings(quint32 &id)
 {
-    bool query = db->remove(id);
+    /*bool query = db->remove(id);
     getSettings(m_fields, "");
-    return query;
+    return query;*/
+    return false;
 }
 
 const QStringList Wireless::checkSaved(QString ssid)
