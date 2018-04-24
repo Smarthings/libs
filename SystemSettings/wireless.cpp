@@ -12,18 +12,17 @@
 Wireless::Wireless() :
     timer(new QTimer)
 {
-    connect(&scan_wireless, SIGNAL(finished(int)), this, SLOT(parseScanWireless(int)));
+    connect(scan_wireless, SIGNAL(finished(int)), this, SLOT(parseScanWireless(int)));
     connect(timer, SIGNAL(timeout()), this, SLOT(scanWireless()), Qt::UniqueConnection);
     timer->start(m_scan_time);
-
-    //db->openDatabaseSettings();
-    //getSettings(m_fields, "");
+    getWifiSaved();
 }
 
 Wireless::~Wireless()
 {
     //delete db;
     delete timer;
+    delete scan_wireless;
 }
 
 void Wireless::startWlan()
@@ -38,6 +37,7 @@ void Wireless::startWlan()
     if (!start_wlan->waitForFinished())
         setError(QString("startWlan Error: %1").arg(start_wlan->errorString()));
     start_wlan->close();
+    getSSID(m_interface);
 }
 
 void Wireless::stopWlan()
@@ -53,6 +53,7 @@ void Wireless::stopWlan()
         setError(QString("stopWlan Error: %1").arg(stop_wlan->errorString()));
     stop_wlan->close();
     delete stop_wlan;
+    getSSID(m_interface);
 }
 
 void Wireless::setNetworkWireless(QJsonObject data)
@@ -120,7 +121,6 @@ void Wireless::setNetworkWireless(QJsonObject data)
             stopWlan();
             startWlan();
         }
-        getSSID(m_interface);
     }
     m_network_wireless.insert("status", true);
     emit networkWirelessChanged();
@@ -165,6 +165,7 @@ const QJsonObject Wireless::info()
 void Wireless::setInterface(QString iface)
 {
     m_interface = std::move(iface);
+    getSSID(m_interface);
     emit interfaceChanged();
 }
 
@@ -199,8 +200,6 @@ void Wireless::abstractInfo()
 
                     obj.insert("ipv6", ipv6);
                 }
-                QString iface_name = iface.name();
-                obj.insert("ssid", getSSID(iface_name));
             }
             m_info.insert(iface.name(), obj);
         }
@@ -215,14 +214,11 @@ void Wireless::scanWireless()
     m_busy_scan = true;
 
     QString command = QString("iwlist %1 scan").arg(m_interface);
-    scan_wireless.start(command);
+    scan_wireless->start(command);
 }
 
 bool Wireless::forgetWirelessNetwork(quint32 id)
 {
-    /*bool query = db->remove(id);
-    getSettings(m_fields, "");
-    return query;*/
     return false;
 }
 
@@ -239,8 +235,8 @@ void Wireless::parseScanWireless(int status)
     QJsonObject obj;
     if (status == 0)
     {
-        while (!scan_wireless.atEnd()) {
-            QString line = scan_wireless.readLine();
+        while (!scan_wireless->atEnd()) {
+            QString line = scan_wireless->readLine();
 
             QRegularExpressionMatch match_START = reg_START.match(line);
             if (match_START.hasMatch() && obj.length() > 0)
@@ -254,14 +250,8 @@ void Wireless::parseScanWireless(int status)
             {
                 QStringList split = match_SSID.captured().replace("\"", "").split(":");
                 obj.insert(split.at(0), split.at(1));
-                QStringList savedPass = checkSaved(split.at(1));
-                if (savedPass.count() > 0)
-                {
-                    obj.insert("id", savedPass.at(0));
+                if (m_list_settings_saved.contains(split.at(1)))
                     obj.insert("saved", true);
-                }
-                if (split.at(1) == m_wifi_connected)
-                    obj.insert("connected", true);
             }
 
             QRegularExpressionMatch match_CHANNEL = reg_CHANNEL.match(line);
@@ -286,7 +276,7 @@ void Wireless::parseScanWireless(int status)
                 obj.insert(split.at(0), split.at(1));
             }
 
-            if (scan_wireless.atEnd())
+            if (scan_wireless->atEnd())
             {
                 m_network_list.append(obj.toVariantMap());
                 obj = {};
@@ -294,7 +284,7 @@ void Wireless::parseScanWireless(int status)
         }
         if (!m_network_list.isEmpty())
             emit network_listChanged();
-        scan_wireless.close();
+        scan_wireless->close();
     }
     m_busy_scan = false;
 }
@@ -307,28 +297,58 @@ void Wireless::busyIndicator(bool status)
 
 bool Wireless::saveSettings(QJsonObject &data)
 {
-    /*bool query = db->save(data);
-    getSettings(m_fields, "");
-    return query;*/
     return false;
 }
 
-void Wireless::getSettings(QStringList &fields,  QString where)
+void Wireless::getWifiSaved()
 {
-    //m_list_settings_saved = db->get(fields, where);
+    QFile *wpa_supplicant_file = new QFile(m_wpa_supplicant);
+    if (!wpa_supplicant_file->open(QIODevice::ReadOnly))
+        setError(QString("getWifiSaved error: %1").arg(wpa_supplicant_file->errorString()));
+    else
+    {
+        QRegularExpression line_network("(network={)");
+        QRegularExpression line_ssid("(ssid=.*)");
+        QRegularExpression line_psk("(psk=.*)");
+        QRegularExpression line_end_network("(})");
+
+        QString essid, psk;
+
+        while (!wpa_supplicant_file->atEnd()) {
+            QString line = wpa_supplicant_file->readLine();
+
+            QRegularExpressionMatch match_line_network = line_network.match(line);
+            if (match_line_network.hasMatch())
+            {
+                essid = "";
+                psk = "";
+            }
+
+            QRegularExpressionMatch match_line_ssid = line_ssid.match(line);
+            if (match_line_ssid.hasMatch())
+                essid = match_line_ssid.captured().replace("ssid=", "").replace("\"", "").trimmed();
+
+            QRegularExpressionMatch match_line_psk = line_psk.match(line);
+            if (match_line_psk.hasMatch())
+                psk = match_line_psk.captured().replace("psk=", "").replace("\"", "").trimmed();
+
+            QRegularExpressionMatch match_line_end_network = line_end_network.match(line);
+            if (match_line_end_network.hasMatch())
+                m_list_settings_saved.insert(essid, psk);
+        }
+    }
+    wpa_supplicant_file->close();
+    delete wpa_supplicant_file;
 }
 
 bool Wireless::deleteSettings(quint32 &id)
 {
-    /*bool query = db->remove(id);
-    getSettings(m_fields, "");
-    return query;*/
     return false;
 }
 
 const QStringList Wireless::checkSaved(QString ssid)
 {
-    QStringList list;
+    /*QStringList list;
     for (const auto &essid : m_list_settings_saved)
     {
         if (essid.value("ssid").toString() == ssid)
@@ -337,7 +357,8 @@ const QStringList Wireless::checkSaved(QString ssid)
             return list;
         }
     }
-    return list;
+    return list;*/
+    return {};
 }
 
 QString Wireless::getGatewayIface(QString iface)
@@ -370,7 +391,7 @@ QString Wireless::getGatewayIface(QString iface)
     return gateway;
 }
 
-const QString Wireless::getSSID(QString iface)
+void Wireless::getSSID(QString iface)
 {
     QString command = QString("iwconfig %1").arg(iface);
     QProcess process;
@@ -384,8 +405,10 @@ const QString Wireless::getSSID(QString iface)
         QRegularExpression reg_SSID("(ESSID:.*)");
         QRegularExpressionMatch match_SSID = reg_SSID.match(result);
         if (match_SSID.hasMatch())
-            return QString(match_SSID.captured()).replace("\"", "").replace(" ", "").split(":").at(1);
+            m_wifi_connected = QString(match_SSID.captured()).replace("\"", "").trimmed().split(":").at(1);
+        else
+            m_wifi_connected = "off/any";
     }
     process.close();
-    return QString("");
+    emit connectedChanged();
 }

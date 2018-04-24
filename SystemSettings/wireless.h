@@ -16,6 +16,7 @@ class Wireless : public Logs
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(QJsonObject info READ info NOTIFY infoChanged)
     Q_PROPERTY(QString interface READ interface WRITE setInterface NOTIFY interfaceChanged)
+    Q_PROPERTY(QString connected READ connected NOTIFY connectedChanged)
     Q_PROPERTY(QList<QVariant> network_list READ network_list NOTIFY network_listChanged)
     Q_PROPERTY(QJsonObject networkWireless READ networkWireless WRITE setNetworkWireless NOTIFY networkWirelessChanged)
 
@@ -68,8 +69,14 @@ signals:
      * @brief emits the signal that the status has been updated
      */
     void busyChanged();
-
+    /**
+     * @brief networkWirelessChanged
+     */
     void networkWirelessChanged();
+    /**
+     * @brief connectedChanged
+     */
+    void connectedChanged();
 
 public slots:
     /**
@@ -81,11 +88,9 @@ public slots:
      */
     const QString interface () { return m_interface; }
     /**
-     * @brief get network SSID
-     * @param QString iface : interface name
+     * @brief networkWireless
+     * @return
      */
-    const QString getSSID(QString iface);
-
     QJsonObject networkWireless() { return m_network_wireless; }
     /**
      * @brief set network wireless. Receives the ESSID of the network and the password and run the wpa_passphrase command to obtain the output to the file wpa_supplicant.conf
@@ -110,6 +115,7 @@ public slots:
      * @param quint32 id : id of wireless network
      */
     bool forgetWirelessNetwork(quint32 id);
+    QString connected() { return m_wifi_connected; }
 
 
 protected slots:
@@ -135,17 +141,24 @@ protected slots:
     bool deleteSettings(quint32 &id);
     /**
      * @brief get list of wireless network saved
-     * @param QStringList fields : list of field names of wireless table
-     * @param QString where : string with the where of query
      */
-    void getSettings(QStringList &fields, QString where);
+    void getWifiSaved();
     /**
      * @brief check if of name wireless network it is in list. Return list with id and SSID
      * @param QString ssid : name wireless network
      */
     const QStringList checkSaved(QString ssid);
-
+    /**
+     * @brief getGatewayIface
+     * @param iface
+     * @return
+     */
     QString getGatewayIface(QString iface);
+    /**
+     * @brief get network SSID
+     * @param QString iface : interface name
+     */
+    void getSSID(QString iface);
 
 private:
     QString m_interface = "";
@@ -157,7 +170,7 @@ private:
     QJsonObject m_info;
     QString m_wifi_connected = "off/any";
 
-    QProcess scan_wireless;
+    QProcess *scan_wireless = new QProcess();
     QList<QVariant> m_network_list;
 
     bool m_busy_scan = false;
@@ -170,7 +183,7 @@ private:
     const QString m_interfaces = "/tmp/interfaces";
 
     const QString m_table = "Wireless";
-    QList<QJsonObject> m_list_settings_saved;
+    QJsonObject m_list_settings_saved;
 
     //QStringList m_fields = {"id", "ssid", "pass_crypt"};
     //DatabaseSettings *db = new DatabaseSettings(m_table);
