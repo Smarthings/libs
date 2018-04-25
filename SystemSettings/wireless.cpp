@@ -7,6 +7,7 @@
 #include <iostream>
 #include <QSqlRecord>
 #include <QSqlField>
+#include <QJsonArray>
 #include "wireless.h"
 
 Wireless::Wireless() :
@@ -56,93 +57,123 @@ void Wireless::stopWlan()
     getSSID(m_interface);
 }
 
-void Wireless::setNetworkWireless(QJsonObject data)
+bool Wireless::setNetworkWireless(QJsonObject data)
 {
     busyIndicator(true);
-    QString command = QString("wpa_passphrase \"%1\" \"%2\"")
-            .arg(data.value("ESSID").toString())
-            .arg(data.value("password").toString());
 
     if (!validateFieldsNetworkWireless(data))
     {
-        setError(QString("setNetworkWireless Error: Campo ESSID ou password não informado"));
-        return;
+        setError(QString("setNetworkWireless Error: Campos obrigatórios não informados"));
+        return false;
     }
-    if (data.value("ESSID").toString() == "" || data.value("password").toString() == "")
+
+    if (!data.value("Saved").toBool() && data.value("Encryption").toBool() && data.value("ESSID").toString() == "" && data.value("Password").toString() == "")
     {
         setError(QString("setNetworkWireless Error: ESSID ou senha em branco"));
-        return;
+        return false;
     }
 
-    QProcess *write_network_wireless = new QProcess();
-    write_network_wireless->start(command);
-
-    if (!write_network_wireless->waitForFinished())
-        setError(QString("setNetworkWireless Error: %1").arg(write_network_wireless->errorString()));
-    else
+    if (!data.value("Saved").toBool() && !m_list_settings_saved.contains(data.value("ESSID").toString()))
     {
-        QString contentWpaSupplicant;
+        QProcess *getHashPassword = new QProcess();
+        getHashPassword->start(QString("wpa_passphrase \"%1\" \"%2\"").arg(data.value("ESSID").toString()).arg(data.value("Password").toString()));
+
+        if (!getHashPassword->waitForFinished())
+        {
+            setError(QString("setNetworkWireless error: %1").arg(getHashPassword->errorString()));
+            getHashPassword->close();
+            return false;
+        }
+
         QRegularExpression errorMsg("(Passphrase must be.*)");
         QRegularExpression sharpPsk("(#psk=.*)");
-        //QRegularExpression psk("(psk=.*)");
-
-        while (!write_network_wireless->atEnd())
-        {
-            QString line = write_network_wireless->readLine();
+        QRegularExpression psk("(psk=.*)");
+        while (!getHashPassword->atEnd()) {
+            QString line = getHashPassword->readLine();
 
             QRegularExpressionMatch match_errorMsg = errorMsg.match(line);
             if (match_errorMsg.hasMatch())
             {
                 setError(QString("setNetworkWireless Error: %1").arg(match_errorMsg.captured()));
-                write_network_wireless->close();
-                return;
+                getHashPassword->close();
+                return false;
             }
 
             QRegularExpressionMatch match_sharpPsk = sharpPsk.match(line);
             if (match_sharpPsk.hasMatch())
             {
-                if (data.value("password").toString() ==
-                        QString(match_sharpPsk.captured().replace("\"", "").split("=")[1]))
+                if (data.value("Password").toString() == QString(match_sharpPsk.captured().replace("\"", "").split("=")[1]))
                     continue;
             }
 
-            /*QRegularExpressionMatch match_psk = psk.match(line);
+            QRegularExpressionMatch match_psk = psk.match(line);
             if (match_psk.hasMatch())
             {
-                QJsonObject data_ssid = {{"ssid", data.value("ESSID").toString()}, {"pass_crypt", QString(match_psk.captured()).split("=")[1]}};
-                saveSettings(data_ssid);
-            }*/
-            contentWpaSupplicant.append(line);
+                m_list_settings_saved.insert(data.value("ESSID").toString(), QJsonObject({{"Password", QString(match_psk.captured()).replace("psk=", "").trimmed()}, {"Encryption", data.value("Encryption").toBool()}}));
+                break;
+            }
         }
-        write_network_wireless->close();
-        delete write_network_wireless;
-        if (writeWpaSupplicant(contentWpaSupplicant))
-        {
-            stopWlan();
-            startWlan();
-        }
+
+        getHashPassword->close();
+        delete getHashPassword;
     }
-    m_network_wireless.insert("status", true);
-    emit networkWirelessChanged();
+
+    if (writeWpaSupplicant(data))
+    {
+        stopWlan();
+        startWlan();
+    }
+
     busyIndicator(false);
+    return true;
+}
+
+bool Wireless::forgetWirelessNetwork(QJsonObject data)
+{
+    busyIndicator(true);
+    if (!data.contains("ESSID"))
+    {
+        setError(QString("forgetWirelessNetwork error: Campos obrigatório não informado"));
+        return false;
+    }
+
+    bool hasKey = m_list_settings_saved.contains(data.value("ESSID").toString());
+    m_list_settings_saved.remove(data.value("ESSID").toString());
+
+    busyIndicator(false);
+    return (hasKey && !m_list_settings_saved.contains(data.value("ESSID").toString()) && writeWpaSupplicant(data));
 }
 
 bool Wireless::validateFieldsNetworkWireless(QJsonObject data)
 {
-    if (data.contains("ESSID") || data.contains("password"))
+    if (data.contains("ESSID") && data.contains("Password") && data.contains("Encryption") && data.contains("Saved"))
         return true;
     return false;
 }
 
-bool Wireless::writeWpaSupplicant(QString &data)
+bool Wireless::writeWpaSupplicant(QJsonObject &data)
 {
+    QString content_wpa_supplicant = "";
+    for (auto essid: m_list_settings_saved.keys())
+    {
+        if (m_list_settings_saved[essid].toObject().value("Encryption").toBool())
+            content_wpa_supplicant.append(QString("network={\n\tssid=\"%1\"\n\tpsk=\"%2\"\n\tpriority=%3\n}\n")
+                                          .arg(essid)
+                                          .arg(m_list_settings_saved.value(essid).toObject().value("Password").toString())
+                                          .arg((essid == data.value("ESSID").toString())? 2 : 1));
+        else
+            content_wpa_supplicant.append(QString("network={\n\tssid=\"%1\"\n\tkey_mgmt=NONE\n\tpriority=%2\n}\n")
+                                          .arg(essid)
+                                          .arg((essid == data.value("ESSID").toString())? 2 : 1));
+    }
+
     QFile file_wpa_supplicant(m_wpa_supplicant);
     if (!file_wpa_supplicant.open(QIODevice::WriteOnly))
     {
         setError(QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString()));
         return false;
     }
-    if (!file_wpa_supplicant.write(data.toUtf8(), data.length()))
+    if (!file_wpa_supplicant.write(content_wpa_supplicant.toUtf8(), content_wpa_supplicant.length()))
     {
         setError(QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString()));
         file_wpa_supplicant.close();
@@ -154,6 +185,8 @@ bool Wireless::writeWpaSupplicant(QString &data)
         setError(QString("writeWpaSupplicant Error: %1").arg(file_wpa_supplicant.errorString()));
         return false;
     }
+    getWifiSaved();
+
     return true;
 }
 
@@ -217,11 +250,6 @@ void Wireless::scanWireless()
     scan_wireless->start(command);
 }
 
-bool Wireless::forgetWirelessNetwork(quint32 id)
-{
-    return false;
-}
-
 void Wireless::parseScanWireless(int status)
 {
     m_network_list.clear();
@@ -265,7 +293,7 @@ void Wireless::parseScanWireless(int status)
             if (match_ENCRIPTION.hasMatch())
             {
                 QStringList split = match_ENCRIPTION.captured().replace("\"", "").replace(" key", "").split(":");
-                obj.insert(split.at(0), split.at(1));
+                obj.insert(split.at(0), (split.at(1) == "on"? true : false));
             }
 
             QRegularExpressionMatch match_QUALITY = reg_QUALITY.match(line);
@@ -310,9 +338,11 @@ void Wireless::getWifiSaved()
         QRegularExpression line_network("(network={)");
         QRegularExpression line_ssid("(ssid=.*)");
         QRegularExpression line_psk("(psk=.*)");
+        QRegularExpression line_key_mgmt("(key_mgmt=NONE)");
         QRegularExpression line_end_network("(})");
 
         QString essid, psk;
+        bool encryption = true;
 
         while (!wpa_supplicant_file->atEnd()) {
             QString line = wpa_supplicant_file->readLine();
@@ -322,6 +352,7 @@ void Wireless::getWifiSaved()
             {
                 essid = "";
                 psk = "";
+                encryption = true;
             }
 
             QRegularExpressionMatch match_line_ssid = line_ssid.match(line);
@@ -332,9 +363,13 @@ void Wireless::getWifiSaved()
             if (match_line_psk.hasMatch())
                 psk = match_line_psk.captured().replace("psk=", "").replace("\"", "").trimmed();
 
+            QRegularExpressionMatch match_line_key_mgmt = line_key_mgmt.match(line);
+            if (match_line_key_mgmt.hasMatch())
+                encryption = false;
+
             QRegularExpressionMatch match_line_end_network = line_end_network.match(line);
             if (match_line_end_network.hasMatch())
-                m_list_settings_saved.insert(essid, psk);
+                m_list_settings_saved.insert(essid, QJsonObject({{"Password", psk}, {"Encryption", encryption}}));
         }
     }
     wpa_supplicant_file->close();

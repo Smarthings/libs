@@ -38,10 +38,10 @@ public:
     bool validateFieldsNetworkWireless(QJsonObject data);
     /**
      * @brief Write the contents of the wpa_passphrase() command in the wpa_supplicant file
-     * @param QString data : content of wpa_passphrase() command
+     * @param QJsonObject data :
      * @return return status of writing wpa_supplicant.conf file
      */
-    bool writeWpaSupplicant(QString &data);
+    bool writeWpaSupplicant(QJsonObject &data);
     /**
      * @brief returns a list with available networks
      * @return
@@ -96,7 +96,7 @@ public slots:
      * @brief set network wireless. Receives the ESSID of the network and the password and run the wpa_passphrase command to obtain the output to the file wpa_supplicant.conf
      * @param QJSonObject data : data in JSON format with network ESSID and password
      */
-    void setNetworkWireless(QJsonObject data);
+    bool setNetworkWireless(QJsonObject data);
     /**
      * @brief defines the interface name
      * @param QString iface : interface name
@@ -114,7 +114,11 @@ public slots:
      * @brief forget wireless network
      * @param quint32 id : id of wireless network
      */
-    bool forgetWirelessNetwork(quint32 id);
+    bool forgetWirelessNetwork(QJsonObject data);
+    /**
+     * @brief connected
+     * @return
+     */
     QString connected() { return m_wifi_connected; }
 
 
