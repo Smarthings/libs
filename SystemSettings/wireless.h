@@ -129,6 +129,12 @@ protected slots:
      */
     void parseScanWireless(int status);
     /**
+     * @brief checkESSIDinList
+     * @param address
+     * @return
+     */
+    qint32 checkESSIDinList(QString address);
+    /**
      * @brief changes the m_status to busy and issues the busyChanged()
      * @param bool status
      */

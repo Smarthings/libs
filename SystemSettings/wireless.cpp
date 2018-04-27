@@ -259,6 +259,8 @@ void Wireless::parseScanWireless(int status)
     QRegularExpression reg_CHANNEL("(Channel:.*)");
     QRegularExpression reg_ENCRIPTION("(Encryption key:.*)");
     QRegularExpression reg_QUALITY("(Quality=.* Signal level=.*)");
+    QRegularExpression reg_address("(Cell \\d\\d - Address: .*)");
+    QRegularExpression reg_getAddress("(((\\d\\w)|(\\w\\d)|(\\d\\d)|(\\w\\w)):((\\d\\w)|(\\w\\d)|(\\d\\d)|(\\w\\w)):((\\d\\w)|(\\w\\d)|(\\d\\d)|(\\w\\w)):((\\d\\w)|(\\w\\d)|(\\d\\d)|(\\w\\w)):((\\d\\w)|(\\w\\d)|(\\d\\d)|(\\w\\w)):((\\d\\w)|(\\w\\d)|(\\d\\d)|(\\w\\w)))");
 
     QJsonObject obj;
     if (status == 0)
@@ -271,6 +273,14 @@ void Wireless::parseScanWireless(int status)
             {
                 m_network_list.append(obj.toVariantMap());
                 obj = {};
+            }
+
+            QRegularExpressionMatch match_address = reg_address.match(line);
+            if (match_address.hasMatch())
+            {
+                QRegularExpressionMatch match_getAddress = reg_getAddress.match(match_address.captured());
+                if (match_getAddress.hasMatch())
+                    obj.insert("address", match_getAddress.captured());
             }
 
             QRegularExpressionMatch match_SSID = reg_SSID.match(line);
@@ -310,11 +320,22 @@ void Wireless::parseScanWireless(int status)
                 obj = {};
             }
         }
+
         if (!m_network_list.isEmpty())
             emit network_listChanged();
         scan_wireless->close();
     }
     m_busy_scan = false;
+}
+
+qint32 Wireless::checkESSIDinList(QString address)
+{
+    for (qint32 i = 0; i < m_network_list.count(); ++i)
+    {
+        if (m_network_list[i].toMap().value("address", QString()).toString() == address)
+            return i;
+    }
+    return -1;
 }
 
 void Wireless::busyIndicator(bool status)
