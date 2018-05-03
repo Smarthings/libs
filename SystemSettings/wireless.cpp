@@ -186,6 +186,7 @@ bool Wireless::writeWpaSupplicant(QJsonObject &data)
         return false;
     }
     getWifiSaved();
+    scanWireless();
 
     return true;
 }
@@ -288,8 +289,7 @@ void Wireless::parseScanWireless(int status)
             {
                 QStringList split = match_SSID.captured().replace("\"", "").split(":");
                 obj.insert(split.at(0), split.at(1));
-                if (m_list_settings_saved.contains(split.at(1)))
-                    obj.insert("saved", true);
+                obj.insert("saved", m_list_settings_saved.contains(split.at(1)));
             }
 
             QRegularExpressionMatch match_CHANNEL = reg_CHANNEL.match(line);
